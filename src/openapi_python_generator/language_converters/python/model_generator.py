@@ -143,7 +143,7 @@ def _wrap_optional(type_str: str, required: bool) -> str:
     return f"Optional[{type_str}]"
 
 
-def _collect_unique_imports(conversions: list[TypeConversion]) -> Optional[List[str]]:
+def _collect_unique_imports(conversions: List[TypeConversion]) -> Optional[List[str]]:
     """
     Safely collect and deduplicate imports from conversions.
 
@@ -246,7 +246,7 @@ def _convert_array_type(
 
 def _convert_composite_schema(
     kind: str,
-    sub_schemas: list[Union[Schema, Reference]],
+    sub_schemas: List[Union[Schema, Reference]],
     required: bool,
     model_name: Optional[str],
 ) -> TypeConversion:
