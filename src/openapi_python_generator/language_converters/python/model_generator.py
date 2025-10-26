@@ -163,9 +163,7 @@ def _collect_unique_imports(conversions: List[TypeConversion]) -> Optional[List[
     return imports if imports else None
 
 
-def _convert_primitive_type(
-    type_str: Optional[str], required: bool
-) -> TypeConversion:
+def _convert_primitive_type(type_str: Optional[str], required: bool) -> TypeConversion:
     """
     Handle simple primitive type conversion (string, int, float, bool, object, null, Any).
 
@@ -225,7 +223,9 @@ def _convert_array_type(
         )
         import_types = converted_reference.type.import_types
         original_type = "array<" + converted_reference.type.original_type + ">"
-        converted_type = list_prefix + converted_reference.type.converted_type + list_suffix
+        converted_type = (
+            list_prefix + converted_reference.type.converted_type + list_suffix
+        )
     elif isinstance(schema.items, Schema30) or isinstance(schema.items, Schema31):
         # For schema items, always pass True (items are always required within the array)
         item_type_str = _normalize_schema_type(schema.items)
@@ -288,17 +288,23 @@ def _convert_composite_schema(
 
     # Build original type string
     if kind == "allOf":
-        original_type = "tuple<" + ",".join([c.original_type for c in conversions]) + ">"
+        original_type = (
+            "tuple<" + ",".join([c.original_type for c in conversions]) + ">"
+        )
         type_wrapper = "Tuple"
     else:  # oneOf or anyOf
-        original_type = "union<" + ",".join([c.original_type for c in conversions]) + ">"
+        original_type = (
+            "union<" + ",".join([c.original_type for c in conversions]) + ">"
+        )
         type_wrapper = "Union"
 
     # Build converted type string
     if len(conversions) == 1:
         converted_type = conversions[0].converted_type
     else:
-        converted_type = type_wrapper + "[" + ",".join([c.converted_type for c in conversions]) + "]"
+        converted_type = (
+            type_wrapper + "[" + ",".join([c.converted_type for c in conversions]) + "]"
+        )
 
     converted_type = _wrap_optional(converted_type, required)
     import_types = _collect_unique_imports(conversions)
