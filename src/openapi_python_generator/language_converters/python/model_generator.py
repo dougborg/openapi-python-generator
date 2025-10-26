@@ -164,12 +164,12 @@ def _collect_unique_imports(conversions: List[TypeConversion]) -> Optional[List[
 
 
 def _convert_primitive_type(
-    type_str: str, required: bool
+    type_str: Optional[str], required: bool
 ) -> TypeConversion:
     """
     Handle simple primitive type conversion (string, int, float, bool, object, null, Any).
 
-    :param type_str: Normalized type string
+    :param type_str: Normalized type string (can be None for schemas without a type)
     :param required: Whether the field is required
     :return: TypeConversion for the primitive type
     """
