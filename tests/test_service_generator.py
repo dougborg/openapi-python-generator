@@ -497,3 +497,20 @@ def test_generate_operation_id_path_param_separator():
     op = Operation(responses=default_responses, operationId=None)  # type: ignore[arg-type]
     op_id = generate_operation_id(op, "get", path_name)
     assert op_id == "get_lists_listId"
+
+
+def test_generate_operation_id_error_message_includes_details():
+    """Error message should include operation details to help identify problematic operations."""
+    op = Operation(
+        responses=default_responses, operationId=None, summary="Get user data"  # type: ignore[arg-type]
+    )
+    try:
+        generate_operation_id(op, "get", None)
+        assert False, "Expected RuntimeError to be raised"
+    except RuntimeError as e:
+        error_msg = str(e)
+        # Verify error message includes helpful details
+        assert "Missing operationId and path_name" in error_msg
+        assert "summary='Get user data'" in error_msg
+        assert "http_op='get'" in error_msg
+        assert "path_name=None" in error_msg

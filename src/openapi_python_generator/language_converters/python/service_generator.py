@@ -248,7 +248,11 @@ def generate_operation_id(
         # Insert underscore before parameter placeholders so /lists/{listId} -> lists_{listId}
         cleaned = re.sub(r"\{([^}]+)\}", r"_\1", path_name)
         return common.normalize_symbol(f"{http_op}_{cleaned}")
-    raise RuntimeError("Missing operationId and path_name for operation")
+    raise RuntimeError(
+        f"Missing operationId and path_name for operation. "
+        f"Details: summary={getattr(operation, 'summary', None)!r}, "
+        f"http_op={http_op!r}, path_name={path_name!r}"
+    )
 
 
 def _generate_params(
