@@ -6,7 +6,6 @@ from openapi_pydantic.v3 import (
     Operation,
     PathItem,
     Reference,
-    RequestBody,
     Response,
     Schema,
 )
@@ -129,17 +128,21 @@ def generate_body_param(operation: Operation) -> Union[str, None]:
                 return "[i.dict() for i in data]"
             if isinstance(items, (Schema, Schema30, Schema31)):
                 if getattr(items, "type", None) == "object" or any(
-                    getattr(items, attr, None) for attr in ["properties", "allOf", "oneOf", "anyOf"]
+                    getattr(items, attr, None)
+                    for attr in ["properties", "allOf", "oneOf", "anyOf"]
                 ):
                     return "[i.dict() for i in data]"
             return "data"
         # Object-like
-        if (
-            getattr(schema, "type", None) == "object"
-            or any(
-                getattr(schema, attr, None)
-                for attr in ["properties", "allOf", "oneOf", "anyOf", "additionalProperties"]
-            )
+        if getattr(schema, "type", None) == "object" or any(
+            getattr(schema, attr, None)
+            for attr in [
+                "properties",
+                "allOf",
+                "oneOf",
+                "anyOf",
+                "additionalProperties",
+            ]
         ):
             return "data"
         # Primitive / unspecified
@@ -236,7 +239,9 @@ def generate_params(operation: Operation) -> str:
     return params + default_params
 
 
-def generate_operation_id(operation: Operation, http_op: str, path_name: Optional[str] = None) -> str:
+def generate_operation_id(
+    operation: Operation, http_op: str, path_name: Optional[str] = None
+) -> str:
     if operation.operationId:
         return common.normalize_symbol(operation.operationId)
     if path_name:

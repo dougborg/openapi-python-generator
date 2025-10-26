@@ -380,7 +380,9 @@ def test_generate_services(model_data):
     result = generate_services(model_data.paths, library_config_dict[HTTPLibrary.httpx])
     for i in result:
         compile(i.content, "<string>", "exec")
-    result2 = generate_services(model_data.paths, library_config_dict[HTTPLibrary.requests])
+    result2 = generate_services(
+        model_data.paths, library_config_dict[HTTPLibrary.requests]
+    )
     for i in result2:
         compile(i.content, "<string>", "exec")
 
