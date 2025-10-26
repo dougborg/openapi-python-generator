@@ -202,31 +202,40 @@ def _convert_array_type(
     Handle array type conversion.
 
     :param schema: Schema object with type="array"
-    :param required: Whether the field is required
+    :param required: Whether the field is required (for the array itself)
     :param model_name: Name of the model being generated
     :return: TypeConversion for the array type
     """
     import_types: Optional[List[str]] = None
 
+    # Build the List[...] wrapper
+    if required:
+        list_prefix = "List["
+        list_suffix = "]"
+    else:
+        list_prefix = "Optional[List["
+        list_suffix = "]]"
+
     # Handle array items
     if isinstance(schema.items, Reference30) or isinstance(schema.items, Reference31):
+        # For reference items, pass the array's required status to force_required
+        # This makes items Optional when array is optional: Optional[List[Optional[Type]]]
         converted_reference = _generate_property_from_reference(
             model_name or "", "", schema.items, schema, required
         )
         import_types = converted_reference.type.import_types
         original_type = "array<" + converted_reference.type.original_type + ">"
-        converted_type = _wrap_optional(
-            f"List[{converted_reference.type.converted_type}]", required
-        )
+        converted_type = list_prefix + converted_reference.type.converted_type + list_suffix
     elif isinstance(schema.items, Schema30) or isinstance(schema.items, Schema31):
+        # For schema items, always pass True (items are always required within the array)
         item_type_str = _normalize_schema_type(schema.items)
         original_type = "array<" + (item_type_str if item_type_str else "unknown") + ">"
         item_conversion = type_converter(schema.items, True, model_name)
-        converted_type = _wrap_optional(f"List[{item_conversion.converted_type}]", required)
+        converted_type = list_prefix + item_conversion.converted_type + list_suffix
         import_types = item_conversion.import_types
     else:
         original_type = "array<unknown>"
-        converted_type = _wrap_optional("List[Any]", required)
+        converted_type = list_prefix + "Any" + list_suffix
 
     return TypeConversion(
         original_type=original_type,
