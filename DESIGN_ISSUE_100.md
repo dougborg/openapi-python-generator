@@ -828,7 +828,8 @@ def _create_error_from_response(
     # Get full response body
     try:
         body_text = response.text
-    except:
+    except (AttributeError, UnicodeDecodeError):
+        # Response object doesn't have .text or body contains invalid UTF-8
         body_text = None
 
     # Determine which error model to use
@@ -853,8 +854,8 @@ def _create_error_from_response(
         try:
             model_class = _ERROR_MODELS[model_name]
             error_model = model_class.model_validate_json(body_text)
-        except Exception:
-            # Parsing failed - invalid JSON, schema mismatch, etc.
+        except (ValidationError, ValueError, TypeError, JSONDecodeError):
+            # Parsing failed - invalid JSON, schema mismatch, wrong type, etc.
             # Keep error_model as None, use raw body instead
             pass
 
@@ -868,7 +869,15 @@ def _create_error_from_response(
         message += f": {str(error_model)}"
 
     # Choose exception class based on status code
-    exception_class = ServerError if status_code >= 500 else ClientError
+    # Defensive: status_code should always be in 4xx or 5xx range at this point
+    # due to earlier validation, but we handle edge cases gracefully
+    if status_code >= 500:
+        exception_class = ServerError
+    elif status_code >= 400:
+        exception_class = ClientError
+    else:
+        # Fallback for unexpected status codes (e.g., 3xx, 1xx)
+        exception_class = APIError
 
     return exception_class(
         status_code=status_code,
@@ -1015,11 +1024,16 @@ class OpReturnType(BaseModel):
     type: Optional[TypeConversion] = None
     status_code: int  # Primary/first success code
     success_codes: List[int] = []  # All success codes
+    has_wildcard_success: bool = False  # True if spec uses '2XX' wildcard pattern
     response_models: Dict[int, str] = {}  # {200: 'User', 201: 'CreatedUser'}
     error_models: Dict[str, str] = {}  # {'404': 'ErrorResponse'}
     complex_type: bool = False
     list_type: Optional[str] = None
 ```
+
+**Field Descriptions**:
+
+- `has_wildcard_success`: Set to `True` when the OpenAPI spec defines `'2XX'` wildcard in responses section, indicating any 2xx status code should be accepted as success. When `True`, generated code uses range check `(200 <= status < 300)` instead of explicit list check.
 
 ### Template Structure
 
@@ -1078,8 +1092,10 @@ def _create_error_from_response(...):
 
     # Check success
     {% if operation.has_wildcard_success %}
+    # OpenAPI spec uses '2XX' wildcard - accept any 2xx status code
     if not (200 <= response.status_code < 300):
     {% else %}
+    # OpenAPI spec defines explicit success codes
     if response.status_code not in {{ operation.success_codes }}:
     {% endif %}
         raise _create_error_from_response(...)
