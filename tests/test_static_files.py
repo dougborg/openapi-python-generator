@@ -1,4 +1,5 @@
 """Test static file generation and inclusion."""
+
 import tempfile
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def test_static_files_are_written():
         api_config=APIConfig(
             file_name="api_config",
             base_url="https://api.example.com",
-            content='class APIConfig:\n    pass\n',
+            content="class APIConfig:\n    pass\n",
         ),
         static_files=[
             StaticFile(
@@ -55,7 +56,7 @@ def test_empty_static_files():
         api_config=APIConfig(
             file_name="api_config",
             base_url="https://api.example.com",
-            content='class APIConfig:\n    pass\n',
+            content="class APIConfig:\n    pass\n",
         ),
         static_files=[],  # Empty list
     )

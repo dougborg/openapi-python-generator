@@ -1,4 +1,5 @@
 """Generator for static files that are copied to the generated client."""
+
 from typing import List
 
 from ...models import StaticFile
