@@ -87,7 +87,7 @@ def _handle_format_conversions(
     schema: Schema, base_type: str, required: bool
 ) -> Optional[TypeConversion]:
     """
-    Handle UUID and datetime format conversions based on orjson usage.
+    Handle UUID, datetime, and date format conversions based on orjson usage.
 
     Returns TypeConversion if special format handling is needed, None otherwise.
 
@@ -124,6 +124,15 @@ def _handle_format_conversions(
             original_type=base_type,
             converted_type=converted_type,
             import_types=["from datetime import datetime"],
+        )
+
+    # Handle date format
+    if schema.schema_format == "date" and common.get_use_orjson():
+        converted_type = "date" if required else "Optional[date]"
+        return TypeConversion(
+            original_type=base_type,
+            converted_type=converted_type,
+            import_types=["from datetime import date"],
         )
 
     return None
